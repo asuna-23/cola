@@ -1,0 +1,92 @@
+backend/
+│
+├── app.py                   # Main Flask app
+├── models.py                # Database models for User, Puppy, and Adoption
+├── routes/
+│   ├── auth_routes.py       # Authentication endpoints
+│   ├── puppy_routes.py      # Puppy registration and listing endpoints
+│   ├── adoption_routes.py   # Adoption endpoints
+│
+├── migrations/              # Alembic migrations folder
+├── config.py                # Flask configuration
+├── requirements.txt         # Dependencies
+
+
+
+
+frontend/
+│
+├── src/
+│   ├── main.js                 # Entry point for Vue app
+│   ├── router.js               # Vue Router setup
+│   ├── App.vue                 # Main application layout
+│   ├── views/                  # Page-level components
+│   │   ├── Login.vue           # Login page
+│   │   ├── Register.vue        # Registration page
+│   │   ├── Dashboard.vue       # Dashboard for logged-in users
+│   │   ├── PuppyList.vue       # Displays available puppies
+│   │   ├── PuppyRegistration.vue # Allows users to register puppies
+│   │   ├── AdoptPuppy.vue      # Allows users to adopt puppies
+│   │
+│   ├── components/             # Reusable components
+│   │   ├── Navbar.vue          # Top navigation bar
+│   │   ├── PuppyCard.vue       # Displays individual puppy details
+│   │
+│   ├── services/               # API services
+│   │   ├── authService.js      # Handles user authentication
+│   │   ├── puppyService.js     # Handles puppy-related requests
+│   │   ├── adoptionService.js  # Handles adoption-related requests
+│   │
+├── public/                     # Public assets
+│   ├── index.html              # Entry HTML file
+│
+├── package.json                # Frontend dependencies
+
+
+///////////// backend
+
+pip install flask flask-sqlalchemy flask-bcrypt flask-jwt-extended alembic
+
+//////////// frontend
+
+npm install vue bootstrap bootstrap-vue axios
+
+
+
+
+//////////////
+Files for Backend
+Main Application
+
+File: app.py
+Contains the main app instance, imports models and routes, and runs the server.
+
+Database Models
+
+File: models.py
+Defines the User, Puppy, and Adoption tables.
+
+Authentication Routes
+
+File: routes/auth_routes.py
+Handles /register and /login endpoints.
+
+Puppy Routes
+
+File: routes/puppy_routes.py
+Handles endpoints for registering puppies, fetching the list of puppies, etc.
+
+Adoption Routes
+
+File: routes/adoption_routes.py
+Handles adopting puppies and viewing adoption history.
+
+Database Migrations
+
+Folder: migrations/
+Use Alembic commands to generate and apply migrations.
+
+Flask Configuration
+
+File: config.py
+Manages environment variables and configuration (e.g., database URL, JWT secret).

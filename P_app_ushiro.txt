@@ -1,0 +1,167 @@
+// app.py
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
+from routes.auth_routes import auth_bp
+from routes.puppy_routes import puppy_bp
+from routes.adoption_routes import adoption_bp
+
+app = Flask(__name__)
+app.config.from_object("config.Config")
+
+db = SQLAlchemy(app)
+jwt = JWTManager(app)
+CORS(app)
+
+# Register Blueprints
+app.register_blueprint(auth_bp, url_prefix="/auth")
+app.register_blueprint(puppy_bp, url_prefix="/puppies")
+app.register_blueprint(adoption_bp, url_prefix="/adoptions")
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+// config.py
+
+import os
+
+class Config:
+    SECRET_KEY = os.environ.get("SECRET_KEY", "your_secret_key")
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL", "sqlite:///puppy_company.db"
+    )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+// models.py
+
+from app import db
+from datetime import datetime
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+
+class Puppy(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    breed = db.Column(db.String(100))
+    age = db.Column(db.Integer)
+    registered_by = db.Column(db.Integer, db.ForeignKey("user.id"))
+
+class Adoption(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    puppy_id = db.Column(db.Integer, db.ForeignKey("puppy.id"))
+    adoption_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+// routes/auth_routes.py
+
+from flask import Blueprint, request, jsonify
+from models import db, User
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import create_access_token
+
+bcrypt = Bcrypt()
+auth_bp = Blueprint("auth", __name__)
+
+@auth_bp.route("/register", methods=["POST"])
+def register():
+    data = request.get_json()
+    hashed_password = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
+    user = User(username=data["username"], password=hashed_password)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({"message": "User registered successfully"}), 201
+
+@auth_bp.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    user = User.query.filter_by(username=data["username"]).first()
+    if user and bcrypt.check_password_hash(user.password, data["password"]):
+        token = create_access_token(identity=user.id)
+        return jsonify({"token": token}), 200
+    return jsonify({"error": "Invalid credentials"}), 401
+
+
+// routes/puppy_routes.py
+
+from flask import Blueprint, request, jsonify
+from models import db, Puppy
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+puppy_bp = Blueprint("puppies", __name__)
+
+@puppy_bp.route("/", methods=["GET"])
+def get_puppies():
+    puppies = Puppy.query.all()
+    return jsonify([{"id": p.id, "name": p.name, "breed": p.breed, "age": p.age} for p in puppies])
+
+@puppy_bp.route("/", methods=["POST"])
+@jwt_required()
+def register_puppy():
+    user_id = get_jwt_identity()
+    data = request.get_json()
+    puppy = Puppy(name=data["name"], breed=data["breed"], age=data["age"], registered_by=user_id)
+    db.session.add(puppy)
+    db.session.commit()
+    return jsonify({"message": "Puppy registered successfully"}), 201
+
+
+// routes/adoption_routes.py
+
+from flask import Blueprint, request, jsonify
+from models import db, Adoption, Puppy
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+adoption_bp = Blueprint("adoptions", __name__)
+
+@adoption_bp.route("/", methods=["POST"])
+@jwt_required()
+def adopt_puppy():
+    user_id = get_jwt_identity()
+    data = request.get_json()
+    puppy = Puppy.query.get(data["puppy_id"])
+    if puppy:
+        adoption = Adoption(user_id=user_id, puppy_id=puppy.id)
+        db.session.add(adoption)
+        db.session.commit()
+        return jsonify({"message": "Puppy adopted successfully"}), 201
+    return jsonify({"error": "Puppy not found"}), 404
+
+
+
+////////// user authentication
+
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///puppy_adoption.db'
+app.config['JWT_SECRET_KEY'] = 'your-secret-key'
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(120), nullable=False)
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.json
+    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    user = User(username=data['username'], email=data['email'], password_hash=hashed_password)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({"message": "User registered successfully!"}), 201
+
+# Similar endpoints for login, puppy registration, and adoptions.

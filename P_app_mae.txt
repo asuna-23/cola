@@ -1,0 +1,451 @@
+frontend/
+│
+├── src/
+│   ├── main.js                 # Entry point for Vue app
+│   ├── App.vue                 # Main application layout
+│   ├── router.js               # Vue Router setup
+│   ├── views/
+│   │   ├── Login.vue           # Login page
+│   │   ├── Register.vue        # User registration page
+│   │   ├── Dashboard.vue       # Dashboard for logged-in users
+│   │   ├── Puppies.vue         # Displays all puppies
+│   │   ├── RegisterPuppy.vue   # Puppy registration page
+│   │   ├── Adopt.vue           # Puppy adoption page
+│   │
+│   ├── services/
+│   │   ├── authService.js      # Authentication API calls
+│   │   ├── puppyService.js     # Puppy API calls
+│   │   ├── adoptionService.js  # Adoption API calls
+│
+├── public/
+│   ├── index.html              # Entry HTML file
+
+
+frontend/
+│
+├── public/
+│   ├── index.html
+│
+├── src/
+│   ├── main.js                 # Entry point for Vue app
+│   ├── App.vue                 # Main application layout
+│   ├── router.js               # Vue Router setup
+│   ├── views/                  # Application views
+│   │   ├── Login.vue           # Login page
+│   │   ├── Register.vue        # User registration page
+│   │   ├── Dashboard.vue       # Dashboard for logged-in users
+│   │   ├── Puppies.vue         # Displays all puppies
+│   │   ├── RegisterPuppy.vue   # Puppy registration page
+│   │   ├── Adopt.vue           # Puppy adoption page
+│   │
+│   ├── services/               # API service files
+│   │   ├── authService.js      # Authentication API calls
+│   │   ├── puppyService.js     # Puppy API calls
+│   │   ├── adoptionService.js  # Adoption API calls
+│
+└── package.json                # Project dependencies
+frontend/
+│
+├── public/
+│   ├── index.html
+│
+├── src/
+│   ├── main.js                 # Entry point for Vue app
+│   ├── App.vue                 # Main application layout
+│   ├── router.js               # Vue Router setup
+│   ├── views/                  # Application views
+│   │   ├── Login.vue           # Login page
+│   │   ├── Register.vue        # User registration page
+│   │   ├── Dashboard.vue       # Dashboard for logged-in users
+│   │   ├── Puppies.vue         # Displays all puppies
+│   │   ├── RegisterPuppy.vue   # Puppy registration page
+│   │   ├── Adopt.vue           # Puppy adoption page
+│   │
+│   ├── services/               # API service files
+│   │   ├── authService.js      # Authentication API calls
+│   │   ├── puppyService.js     # Puppy API calls
+│   │   ├── adoptionService.js  # Adoption API calls
+│
+└── package.json                # Project dependencies
+
+
+// router.js
+
+import { createRouter, createWebHistory } from "vue-router";
+import Login from "./views/Login.vue";
+import Register from "./views/Register.vue";
+import Dashboard from "./views/Dashboard.vue";
+import Puppies from "./views/Puppies.vue";
+import RegisterPuppy from "./views/RegisterPuppy.vue";
+import Adopt from "./views/Adopt.vue";
+
+const routes = [
+  { path: "/", redirect: "/login" },
+  { path: "/login", component: Login },
+  { path: "/register", component: Register },
+  { path: "/dashboard", component: Dashboard },
+  { path: "/puppies", component: Puppies },
+  { path: "/register-puppy", component: RegisterPuppy },
+  { path: "/adopt", component: Adopt },
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+});
+
+export default router;
+
+
+// login
+
+<template>
+  <div class="login-container">
+    <b-container>
+      <b-row class="justify-content-center">
+        <b-col md="6">
+          <b-card title="Login">
+            <b-form @submit.prevent="login">
+              <b-form-group label="Username">
+                <b-form-input v-model="username" required></b-form-input>
+              </b-form-group>
+              <b-form-group label="Password">
+                <b-form-input type="password" v-model="password" required></b-form-input>
+              </b-form-group>
+              <b-button type="submit" variant="primary" block>Login</b-button>
+            </b-form>
+            <div class="mt-3 text-center">
+              <small>Don't have an account? <router-link to="/register">Register</router-link></small>
+            </div>
+          </b-card>
+        </b-col>
+      </b-row>
+    </b-container>
+  </div>
+</template>
+
+<script>
+import { loginUser } from "../services/authService";
+
+export default {
+  data() {
+    return {
+      username: "",
+      password: "",
+    };
+  },
+  methods: {
+    async login() {
+      try {
+        const response = await loginUser({ username: this.username, password: this.password });
+        localStorage.setItem("token", response.token);
+        this.$router.push("/dashboard");
+      } catch (error) {
+        alert("Login failed: " + error.message);
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.login-container {
+  margin-top: 100px;
+}
+</style>
+
+
+// dashboard
+
+<template>
+  <div>
+    <b-navbar variant="dark" type="dark" bg="primary">
+      <b-navbar-brand href="#">Puppy Company</b-navbar-brand>
+      <b-navbar-nav>
+        <b-nav-item href="/puppies">View Puppies</b-nav-item>
+        <b-nav-item href="/register-puppy">Register Puppy</b-nav-item>
+        <b-nav-item href="/adopt">Adopt a Puppy</b-nav-item>
+      </b-navbar-nav>
+      <b-navbar-nav class="ml-auto">
+        <b-nav-item @click="logout">Logout</b-nav-item>
+      </b-navbar-nav>
+    </b-navbar>
+    <router-view />
+  </div>
+</template>
+
+<script>
+export default {
+  methods: {
+    logout() {
+      localStorage.removeItem("token");
+      this.$router.push("/login");
+    },
+  },
+};
+</script>
+
+
+// RegisterPuppy
+
+<template>
+  <b-container>
+    <b-row class="justify-content-center">
+      <b-col md="6">
+        <b-card title="Register a Puppy">
+          <b-form @submit.prevent="registerPuppy">
+            <b-form-group label="Name">
+              <b-form-input v-model="name" required></b-form-input>
+            </b-form-group>
+            <b-form-group label="Breed">
+              <b-form-input v-model="breed"></b-form-input>
+            </b-form-group>
+            <b-form-group label="Age">
+              <b-form-input type="number" v-model="age"></b-form-input>
+            </b-form-group>
+            <b-button type="submit" variant="primary" block>Register</b-button>
+          </b-form>
+        </b-card>
+      </b-col>
+    </b-row>
+  </b-container>
+</template>
+
+<script>
+import { registerPuppy } from "../services/puppyService";
+
+export default {
+  data() {
+    return {
+      name: "",
+      breed: "",
+      age: "",
+    };
+  },
+  methods: {
+    async registerPuppy() {
+      try {
+        const response = await registerPuppy({ name: this.name, breed: this.breed, age: this.age });
+        alert("Puppy registered successfully!");
+        this.$router.push("/puppies");
+      } catch (error) {
+        alert("Failed to register puppy: " + error.message);
+      }
+    },
+  },
+};
+</script>
+
+// Puppies.vue
+
+<template>
+  <b-container>
+    <h1 class="text-center">Available Puppies for Adoption</h1>
+    <b-row>
+      <b-col md="4" v-for="puppy in puppies" :key="puppy.id">
+        <b-card :title="puppy.name" class="mb-4">
+          <p><strong>Breed:</strong> {{ puppy.breed }}</p>
+          <p><strong>Age:</strong> {{ puppy.age }} years</p>
+          <b-button
+            variant="success"
+            @click="adoptPuppy(puppy.id)"
+            v-if="puppy.is_available"
+          >
+            Adopt
+          </b-button>
+          <b-badge variant="danger" v-else>Adopted</b-badge>
+        </b-card>
+      </b-col>
+    </b-row>
+  </b-container>
+</template>
+
+<script>
+import { getPuppies } from "../services/puppyService";
+import { adoptPuppy } from "../services/adoptionService";
+
+export default {
+  data() {
+    return {
+      puppies: [],
+    };
+  },
+  async created() {
+    try {
+      this.puppies = await getPuppies();
+    } catch (error) {
+      alert("Error fetching puppies: " + error.message);
+    }
+  },
+  methods: {
+    async adoptPuppy(puppyId) {
+      try {
+        await adoptPuppy(puppyId);
+        alert("You have successfully adopted the puppy!");
+        this.puppies = await getPuppies(); // Refresh the list
+      } catch (error) {
+        alert("Error adopting puppy: " + error.message);
+      }
+    },
+  },
+};
+</script>
+
+
+// RegisterPuppy
+
+<template>
+  <b-container>
+    <h1 class="text-center">Register a Puppy</h1>
+    <b-row class="justify-content-center">
+      <b-col md="6">
+        <b-card>
+          <b-form @submit.prevent="registerPuppy">
+            <b-form-group label="Name">
+              <b-form-input v-model="name" required></b-form-input>
+            </b-form-group>
+            <b-form-group label="Breed">
+              <b-form-input v-model="breed" required></b-form-input>
+            </b-form-group>
+            <b-form-group label="Age (in years)">
+              <b-form-input type="number" v-model="age" required></b-form-input>
+            </b-form-group>
+            <b-button type="submit" variant="primary" block>Register Puppy</b-button>
+          </b-form>
+        </b-card>
+      </b-col>
+    </b-row>
+  </b-container>
+</template>
+
+<script>
+import { registerPuppy } from "../services/puppyService";
+
+export default {
+  data() {
+    return {
+      name: "",
+      breed: "",
+      age: null,
+    };
+  },
+  methods: {
+    async registerPuppy() {
+      try {
+        await registerPuppy({
+          name: this.name,
+          breed: this.breed,
+          age: this.age,
+        });
+        alert("Puppy registered successfully!");
+        this.$router.push("/puppies");
+      } catch (error) {
+        alert("Error registering puppy: " + error.message);
+      }
+    },
+  },
+};
+</script>
+
+
+// Adopt.vue
+
+<template>
+  <b-container>
+    <h1 class="text-center">My Adopted Puppies</h1>
+    <b-row>
+      <b-col md="4" v-for="puppy in adoptedPuppies" :key="puppy.id">
+        <b-card :title="puppy.name" class="mb-4">
+          <p><strong>Breed:</strong> {{ puppy.breed }}</p>
+          <p><strong>Age:</strong> {{ puppy.age }} years</p>
+          <b-badge variant="success">Adopted</b-badge>
+        </b-card>
+      </b-col>
+    </b-row>
+  </b-container>
+</template>
+
+<script>
+import { getUserAdoptedPuppies } from "../services/adoptionService";
+
+export default {
+  data() {
+    return {
+      adoptedPuppies: [],
+    };
+  },
+  async created() {
+    try {
+      this.adoptedPuppies = await getUserAdoptedPuppies();
+    } catch (error) {
+      alert("Error fetching adopted puppies: " + error.message);
+    }
+  },
+};
+</script>
+
+
+
+
+
+////// services/authService.js
+
+import axios from "axios";
+
+const API_URL = "http://localhost:5000/auth";
+
+export const loginUser = async (credentials) => {
+  const response = await axios.post(`${API_URL}/login`, credentials);
+  return response.data;
+};
+
+export const registerUser = async (userData) => {
+  const response = await axios.post(`${API_URL}/register`, userData);
+  return response.data;
+};
+
+
+//// puppyService
+
+import axios from "axios";
+
+const API_URL = "http://localhost:5000/api/puppies";
+
+export const getPuppies = async () => {
+  const response = await axios.get(API_URL);
+  return response.data;
+};
+
+export const registerPuppy = async (puppyData) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.post(API_URL, puppyData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+
+//// adoptionService
+
+import axios from "axios";
+
+const API_URL = "http://localhost:5000/api/adoptions";
+
+export const adoptPuppy = async (puppyId) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.post(
+    API_URL,
+    { puppy_id: puppyId },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+export const getUserAdoptedPuppies = async () => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(API_URL, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+

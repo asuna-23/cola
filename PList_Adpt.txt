@@ -1,0 +1,42 @@
+<template>
+  <div>
+    <h1>Puppies Available for Adoption</h1>
+    <div v-if="puppies.length">
+      <PuppyCard
+        v-for="puppy in puppies"
+        :key="puppy.id"
+        :puppy="puppy"
+        @adopt="adoptPuppy(puppy.id)"
+      />
+    </div>
+    <div v-else>
+      <p>No puppies available for adoption.</p>
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+import PuppyCard from './PuppyCard.vue';
+
+export default {
+  data() {
+    return {
+      puppies: [],
+    };
+  },
+  mounted() {
+    axios.get('/puppies').then(response => {
+      this.puppies = response.data;
+    });
+  },
+  methods: {
+    adoptPuppy(id) {
+      axios.post('/adopt', { puppy_id: id }).then(response => {
+        alert('Adoption successful!');
+        this.puppies = this.puppies.filter(puppy => puppy.id !== id);
+      });
+    },
+  },
+};
+</script>
