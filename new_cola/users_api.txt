@@ -1,0 +1,125 @@
+######## using bcrypt
+
+from flask import Blueprint, request, jsonify
+from src.setup_db_example.puppy_co.models.user_model import UsersDb
+import bcrypt
+
+user_routes = Blueprint("user_routes", __name__)
+
+@user_routes.route("/api/users/login", methods=["POST"])
+def login_user():
+    # Get JSON data from request body
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+
+    # Validate input
+    if not email or not password:
+        return jsonify({"message": "Email and password are required!"}), 400
+
+    # Find user by email
+    user = UsersDb.query.filter_by(user_email=email).first()
+    if not user:
+        return jsonify({"message": "Invalid email or password!"}), 401
+
+    # Validate password using bcrypt
+    if not bcrypt.checkpw(password.encode('utf-8'), user.user_password.encode('utf-8')):
+        return jsonify({"message": "Invalid email or password!"}), 401
+
+    # If login is successful
+    return jsonify({"message": "Login successful!", "user_id": user.user_id}), 200
+
+
+@user_routes.route("/api/users/register", methods=["POST"])
+def register_user():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+    # Additional user details...
+
+    # Check if email already exists
+    if UsersDb.query.filter_by(user_email=email).first():
+        return jsonify({"message": "Email already exists!"}), 400
+
+    # Hash the password using bcrypt
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+    # Create and save the user
+    new_user = UsersDb(
+        user_email=email,
+        user_password=hashed_password.decode('utf-8'),  # Store as string
+        # Additional fields...
+    )
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({"message": "User registered successfully!"}), 201
+
+
+
+####### using werkzzeug
+
+from flask import Blueprint, request, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
+from src.models.user_model import UsersDb
+from src.database import db
+from src.schemas.user_schema import UserSchema
+
+users_bp = Blueprint('users', __name__)
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+
+@users_bp.route('/api/users/register', methods=['POST'])
+def register_user():
+    data = request.json
+    hashed_password = generate_password_hash(data['password'], method='sha256')
+    new_user = UsersDb(
+        user_name=data['name'],
+        user_email=data['email'],
+        user_password=hashed_password,
+        user_phoneNumber=data['phone'],
+        user_address=data['address']
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return user_schema.jsonify(new_user), 201
+
+@users_bp.route('/api/users/login', methods=['POST'])
+def login_user():
+    data = request.json
+    user = UsersDb.query.filter_by(user_email=data['email']).first()
+    if not user or not check_password_hash(user.user_password, data['password']):
+        return jsonify({'message': 'Invalid email or password'}), 401
+    return jsonify({'message': 'Login successful'}), 200
+
+
+#### login_api
+
+from flask import Blueprint, request, jsonify
+from src.setup_db_example.puppy_co.models.user_model import UsersDb
+from werkzeug.security import check_password_hash  # Use for hashed password comparison
+
+user_routes = Blueprint("user_routes", __name__)
+
+@user_routes.route("/api/users/login", methods=["POST"])
+def login_user():
+    data = request.get_json()  # Get email and password from request body
+    email = data.get("email")
+    password = data.get("password")
+
+    # Validate input
+    if not email or not password:
+        return jsonify({"message": "Email and password are required!"}), 400
+
+    # Check if user exists in database
+    user = UsersDb.query.filter_by(user_email=email).first()
+    if not user:
+        return jsonify({"message": "Invalid email or password!"}), 401
+
+    # Validate password (if hashed)
+    if not check_password_hash(user.user_password, password):
+        return jsonify({"message": "Invalid email or password!"}), 401
+
+    # If login is successful
+    return jsonify({"message": "Login successful!", "user_id": user.user_id}), 200
+

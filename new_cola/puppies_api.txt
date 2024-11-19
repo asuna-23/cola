@@ -1,0 +1,197 @@
+############# using jsonify
+
+from flask import Blueprint, request, jsonify
+from src.models.puppy_model import PuppyDb
+from src.database import db
+from src.schemas.puppy_schema import PuppySchema
+
+puppies_bp = Blueprint('puppies', __name__)
+puppy_schema = PuppySchema()
+puppies_schema = PuppySchema(many=True)
+
+@puppies_bp.route('/api/puppies', methods=['GET'])
+def get_puppies():
+    puppies = PuppyDb.query.all()
+    return puppies_schema.jsonify(puppies), 200
+
+@puppies_bp.route('/api/puppies', methods=['POST'])
+def create_puppy():
+    data = request.json
+    new_puppy = PuppyDb(
+        puppy_name=data['name'],
+        puppy_breed=data['breed'],
+        puppy_age=data['age'],
+        puppy_gender=data['gender'],
+        puppy_size=data['size'],
+        puppy_adopted_status=False,
+        previous_owner_id=data['owner_id']
+    )
+    db.session.add(new_puppy)
+    db.session.commit()
+    return puppy_schema.jsonify(new_puppy), 201
+
+@puppies_bp.route('/api/puppies/<int:puppy_id>', methods=['DELETE'])
+def delete_puppy(puppy_id):
+    puppy = PuppyDb.query.get_or_404(puppy_id)
+    db.session.delete(puppy)
+    db.session.commit()
+    return jsonify({"message": f"Puppy with id {puppy_id} deleted successfully"}), 200
+
+
+@puppies_bp.route('/api/puppies/<int:puppy_id>', methods=['PUT'])
+def update_puppy(puppy_id):
+    data = request.json
+    puppy = PuppyDb.query.get_or_404(puppy_id)
+    
+    # Update puppy details
+    if 'name' in data:
+        puppy.puppy_name = data['name']
+    if 'breed' in data:
+        puppy.puppy_breed = data['breed']
+    if 'age' in data:
+        puppy.puppy_age = data['age']
+    if 'gender' in data:
+        puppy.puppy_gender = data['gender']
+    if 'size' in data:
+        puppy.puppy_size = data['size']
+    if 'adopted_status' in data:
+        puppy.puppy_adopted_status = data['adopted_status']
+    if 'owner_id' in data:
+        puppy.previous_owner_id = data['owner_id']
+    
+    db.session.commit()
+    return puppy_schema.jsonify(puppy), 200
+
+
+
+######### using json and dump
+
+@puppies_bp.route('/api/puppies', methods=['GET'])
+def get_puppies():
+    puppies = PuppyDb.query.all()
+    puppies_data = puppies_schema.dump(puppies)  # Serialize with Marshmallow
+    return {"puppies": puppies_data}, 200  # Directly return as JSON
+
+@puppies_bp.route('/api/puppies', methods=['POST'])
+def create_puppy():
+    data = request.json
+    new_puppy = PuppyDb(
+        puppy_name=data['name'],
+        puppy_breed=data['breed'],
+        puppy_age=data['age'],
+        puppy_gender=data['gender'],
+        puppy_size=data['size'],
+        puppy_adopted_status=False,
+        previous_owner_id=data['owner_id']
+    )
+    db.session.add(new_puppy)
+    db.session.commit()
+
+    new_puppy_data = puppy_schema.dump(new_puppy)  # Serialize with Marshmallow
+    return {"puppy": new_puppy_data}, 201  # Directly return as JSON
+
+
+@puppies_bp.route('/api/puppies/<int:puppy_id>', methods=['DELETE'])
+def delete_puppy(puppy_id):
+    puppy = PuppyDb.query.get_or_404(puppy_id)
+    db.session.delete(puppy)
+    db.session.commit()
+    return {"message": f"Puppy with id {puppy_id} deleted successfully"}, 200
+
+
+@puppies_bp.route('/api/puppies/<int:puppy_id>', methods=['PUT'])
+def update_puppy(puppy_id):
+    data = request.json
+    puppy = PuppyDb.query.get_or_404(puppy_id)
+    
+    # Update puppy details
+    if 'name' in data:
+        puppy.puppy_name = data['name']
+    if 'breed' in data:
+        puppy.puppy_breed = data['breed']
+    if 'age' in data:
+        puppy.puppy_age = data['age']
+    if 'gender' in data:
+        puppy.puppy_gender = data['gender']
+    if 'size' in data:
+        puppy.puppy_size = data['size']
+    if 'adopted_status' in data:
+        puppy.puppy_adopted_status = data['adopted_status']
+    if 'owner_id' in data:
+        puppy.previous_owner_id = data['owner_id']
+    
+    db.session.commit()
+    updated_puppy_data = puppy_schema.dump(puppy)
+    return {"puppy": updated_puppy_data}, 200
+
+
+### ---- complete using json ----
+
+from flask import Blueprint, request, jsonify
+from src.models.puppy_model import PuppyDb
+from src.database import db
+from src.schemas.puppy_schema import PuppySchema
+
+puppies_bp = Blueprint('puppies', __name__)
+puppy_schema = PuppySchema()
+puppies_schema = PuppySchema(many=True)
+
+# Get all puppies
+@puppies_bp.route('/api/puppies', methods=['GET'])
+def get_puppies():
+    puppies = PuppyDb.query.all()
+    puppies_data = puppies_schema.dump(puppies)
+    return {"puppies": puppies_data}, 200
+
+# Create a new puppy
+@puppies_bp.route('/api/puppies', methods=['POST'])
+def create_puppy():
+    data = request.json
+    new_puppy = PuppyDb(
+        puppy_name=data['name'],
+        puppy_breed=data['breed'],
+        puppy_age=data['age'],
+        puppy_gender=data['gender'],
+        puppy_size=data['size'],
+        puppy_adopted_status=False,
+        previous_owner_id=data['owner_id']
+    )
+    db.session.add(new_puppy)
+    db.session.commit()
+    new_puppy_data = puppy_schema.dump(new_puppy)
+    return {"puppy": new_puppy_data}, 201
+
+# Delete a puppy
+@puppies_bp.route('/api/puppies/<int:puppy_id>', methods=['DELETE'])
+def delete_puppy(puppy_id):
+    puppy = PuppyDb.query.get_or_404(puppy_id)
+    db.session.delete(puppy)
+    db.session.commit()
+    return {"message": f"Puppy with id {puppy_id} deleted successfully"}, 200
+
+# Update a puppy
+@puppies_bp.route('/api/puppies/<int:puppy_id>', methods=['PUT'])
+def update_puppy(puppy_id):
+    data = request.json
+    puppy = PuppyDb.query.get_or_404(puppy_id)
+    
+    if 'name' in data:
+        puppy.puppy_name = data['name']
+    if 'breed' in data:
+        puppy.puppy_breed = data['breed']
+    if 'age' in data:
+        puppy.puppy_age = data['age']
+    if 'gender' in data:
+        puppy.puppy_gender = data['gender']
+    if 'size' in data:
+        puppy.puppy_size = data['size']
+    if 'adopted_status' in data:
+        puppy.puppy_adopted_status = data['adopted_status']
+    if 'owner_id' in data:
+        puppy.previous_owner_id = data['owner_id']
+    
+    db.session.commit()
+    updated_puppy_data = puppy_schema.dump(puppy)
+    return {"puppy": updated_puppy_data}, 200
+
+

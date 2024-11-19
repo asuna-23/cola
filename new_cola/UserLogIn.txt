@@ -1,0 +1,129 @@
+// w/ validation
+
+<template>
+  <div class="login">
+    <b-form @submit.prevent="loginUser">
+      <b-form-group label="Email">
+        <b-form-input
+          v-model="email"
+          type="email"
+          :state="emailState"
+          @input="validateEmail"
+          required
+        ></b-form-input>
+        <b-form-invalid-feedback>Email is invalid.</b-form-invalid-feedback>
+      </b-form-group>
+      <b-form-group label="Password">
+        <b-form-input
+          v-model="password"
+          type="password"
+          :state="passwordState"
+          @input="validatePassword"
+          required
+        ></b-form-input>
+        <b-form-invalid-feedback>
+          Password must be at least 6 characters long.
+        </b-form-invalid-feedback>
+      </b-form-group>
+      <b-button type="submit" variant="primary" :disabled="!isFormValid">
+        Login
+      </b-button>
+    </b-form>
+    <b-alert v-if="message" variant="danger" dismissible>{{ message }}</b-alert>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+
+export default {
+  data() {
+    return {
+      email: "",
+      password: "",
+      message: "",
+      emailState: null,
+      passwordState: null,
+    };
+  },
+  computed: {
+    // Determines if the form is valid
+    isFormValid() {
+      return this.emailState === true && this.passwordState === true;
+    },
+  },
+  methods: {
+    validateEmail() {
+      // Simple email regex validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      this.emailState = emailRegex.test(this.email);
+    },
+    validatePassword() {
+      // Ensure password has at least 6 characters
+      this.passwordState = this.password.length >= 6;
+    },
+    async loginUser() {
+      // Additional server-side validation in case client-side is bypassed
+      if (!this.isFormValid) {
+        this.message = "Please correct the errors in the form.";
+        return;
+      }
+
+      try {
+        const response = await axios.post("/api/users/login", {
+          email: this.email,
+          password: this.password,
+        });
+        alert("Login successful!");
+      } catch (error) {
+        this.message = error.response?.data.message || "Login failed!";
+      }
+    },
+  },
+};
+</script>
+
+
+
+// without validation
+<template>
+  <div class="login">
+    <b-form @submit.prevent="loginUser">
+      <b-form-group label="Email">
+        <b-form-input v-model="email" type="email" required></b-form-input>
+      </b-form-group>
+      <b-form-group label="Password">
+        <b-form-input v-model="password" type="password" required></b-form-input>
+      </b-form-group>
+      <b-button type="submit" variant="primary">Login</b-button>
+    </b-form>
+    <b-alert v-if="message" variant="danger" dismissible>{{ message }}</b-alert>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+
+export default {
+  data() {
+    return {
+      email: "",
+      password: "",
+      message: "",
+    };
+  },
+  methods: {
+    async loginUser() {
+      try {
+        const response = await axios.post("/api/users/login", {
+          email: this.email,
+          password: this.password,
+        });
+        alert("Login successful!");
+      } catch (error) {
+        this.message = error.response?.data.message || "Login failed!";
+      }
+    },
+  },
+};
+</script>

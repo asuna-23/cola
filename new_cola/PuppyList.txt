@@ -1,0 +1,47 @@
+<template>
+  <div class="puppy-list">
+    <b-table :items="puppies" :fields="fields">
+      <template #cell(actions)="row">
+        <b-button variant="primary" @click="adoptPuppy(row.item)">Adopt</b-button>
+      </template>
+    </b-table>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+
+export default {
+  data() {
+    return {
+      puppies: [],
+      fields: [
+        { key: "puppy_name", label: "Name" },
+        { key: "puppy_breed", label: "Breed" },
+        { key: "puppy_age", label: "Age" },
+        { key: "puppy_gender", label: "Gender" },
+        { key: "actions", label: "Actions" },
+      ],
+    };
+  },
+  async created() {
+    const response = await axios.get("/api/puppies");
+    this.puppies = response.data;
+  },
+  methods: {
+    async adoptPuppy(puppy) {
+      try {
+        await axios.post("/api/adoptions", {
+          puppy_id: puppy.puppy_id,
+          adopter_id: 1, // Replace with logged-in user ID
+          adoption_date: new Date().toISOString().split("T")[0],
+        });
+        alert("Puppy adopted successfully!");
+        puppy.puppy_adopted_status = true;
+      } catch (error) {
+        alert("Adoption failed!");
+      }
+    },
+  },
+};
+</script>

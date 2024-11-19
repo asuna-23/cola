@@ -1,0 +1,22 @@
+// puppy_schema
+from src.database import ma
+from src.models.puppy_model import PuppyDb
+
+class PuppySchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = PuppyDb
+        include_fk = True
+
+
+// adoption_schema
+
+from src.database import ma
+from src.models.adoption_model import AdoptionDb
+
+class AdoptionSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = AdoptionDb
+        include_fk = True
+
+
+// user_schema

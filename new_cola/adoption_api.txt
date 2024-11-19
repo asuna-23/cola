@@ -1,0 +1,26 @@
+from flask import Blueprint, request, jsonify
+from src.models.adoption_model import AdoptionDb
+from src.models.puppy_model import PuppyDb
+from src.database import db
+from src.schemas.adoption_schema import AdoptionSchema
+
+adoptions_bp = Blueprint('adoptions', __name__)
+adoption_schema = AdoptionSchema()
+adoptions_schema = AdoptionSchema(many=True)
+
+@adoptions_bp.route('/api/adoptions', methods=['POST'])
+def adopt_puppy():
+    data = request.json
+    puppy = PuppyDb.query.get(data['puppy_id'])
+    if not puppy or puppy.puppy_adopted_status:
+        return jsonify({'message': 'Puppy not available for adoption'}), 400
+
+    adoption = AdoptionDb(
+        adopter_id=data['adopter_id'],
+        puppy_id=data['puppy_id'],
+        adoption_date=data['adoption_date']
+    )
+    puppy.puppy_adopted_status = True
+    db.session.add(adoption)
+    db.session.commit()
+    return adoption_schema.jsonify(adoption), 201

@@ -1,0 +1,9 @@
+class UsersDb(db.Model):
+    __tablename__ = "users_tbl"
+
+    user_id = db.Column(db.Integer, primary_key=True)
+    user_name = db.Column(db.String(40), nullable=False)
+    user_email = db.Column(db.String(30), nullable=False, unique=True)
+    user_password = db.Column(db.String(128), nullable=False)  # Use hashed passwords
+    user_phoneNumber = db.Column(db.String(12), nullable=False)
+    user_address = db.Column(db.String(30), nullable=False)

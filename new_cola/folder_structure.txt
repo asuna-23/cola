@@ -1,0 +1,28 @@
+src/
+├── api/
+│   ├── users.py
+│   ├── puppies.py
+│   ├── adoptions.py
+├── models/
+│   ├── user_model.py
+│   ├── puppy_model.py
+│   ├── adoption_model.py
+├── schemas/
+│   ├── user_schema.py
+│   ├── puppy_schema.py
+│   ├── adoption_schema.py
+├── database.py
+├── config.py
+└── app.py
+
+
+// frontend
+src/
+├── components/
+│   ├── UserLogin.vue
+│   ├── UserRegister.vue
+│   ├── PuppyList.vue
+│   ├── PuppyForm.vue
+│   ├── AdoptPuppy.vue
+├── App.vue
+├── main.js
