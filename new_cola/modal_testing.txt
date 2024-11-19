@@ -1,0 +1,115 @@
+// show()
+
+import { mount } from '@vue/test-utils'
+import { BModal, BButton } from 'bootstrap-vue'
+import YourComponent from '@/components/YourComponent.vue'
+
+describe('Modal with ref and .show()', () => {
+  it('opens the modal when the button is clicked', async () => {
+    // Mount the component
+    const wrapper = mount(YourComponent, {
+      stubs: {
+        'b-modal': BModal,
+        'b-button': BButton,
+      },
+    })
+
+    // Spy on the show method to check if it's called
+    const showSpy = jest.spyOn(wrapper.vm.$refs.myModal, 'show')
+
+    // Find the button and trigger a click event
+    await wrapper.find('button').trigger('click')
+
+    // Assert that the show method was called
+    expect(showSpy).toHaveBeenCalled()
+
+    // Check if the modal is now visible in the DOM
+    // You can check if the modal exists or if it has a specific class that gets added when it's shown
+    expect(wrapper.find('.b-modal').exists()).toBe(true)
+  })
+})
+
+
+// hide()
+
+it('closes the modal when the close button is clicked', async () => {
+  const wrapper = mount(YourComponent, {
+    stubs: {
+      'b-modal': BModal,
+      'b-button': BButton,
+    },
+  })
+
+  // Open the modal
+  await wrapper.find('button').trigger('click')
+
+  // Spy on the hide method to check if it's called
+  const hideSpy = jest.spyOn(wrapper.vm.$refs.myModal, 'hide')
+
+  // Trigger the close action (this could be a button inside the modal)
+  await wrapper.find('.b-modal-close').trigger('click')
+
+  // Assert that the hide method was called
+  expect(hideSpy).toHaveBeenCalled()
+
+  // Optionally check that the modal is no longer in the DOM
+  expect(wrapper.find('.b-modal').exists()).toBe(false)
+})
+
+// using nextTick
+
+import { mount } from '@vue/test-utils'
+import { BModal, BButton } from 'bootstrap-vue'
+import YourComponent from '@/components/YourComponent.vue'
+
+describe('Modal with ref and .show()', () => {
+  it('opens the modal when the button is clicked', async () => {
+    // Mount the component
+    const wrapper = mount(YourComponent, {
+      stubs: {
+        'b-modal': BModal,
+        'b-button': BButton,
+      },
+    })
+
+    // Trigger the button click to open the modal
+    await wrapper.find('button').trigger('click')
+
+    // Wait for the DOM to update (modal appears)
+    await wrapper.vm.$nextTick()
+
+    // Check if the modal is visible
+    expect(wrapper.find('.b-modal').exists()).toBe(true)
+  })
+
+  it('closes the modal when the close button is clicked', async () => {
+    const wrapper = mount(YourComponent, {
+      stubs: {
+        'b-modal': BModal,
+        'b-button': BButton,
+      },
+    })
+
+    // Open the modal
+    await wrapper.find('button').trigger('click')
+
+    // Wait for the modal to appear
+    await wrapper.vm.$nextTick()
+
+    // Spy on the hide method
+    const hideSpy = jest.spyOn(wrapper.vm.$refs.myModal, 'hide')
+
+    // Trigger the close button click
+    await wrapper.find('.b-modal-close').trigger('click')
+
+    // Wait for the DOM to update (modal should close)
+    await wrapper.vm.$nextTick()
+
+    // Ensure the hide method was called
+    expect(hideSpy).toHaveBeenCalled()
+
+    // Optionally check if the modal is not in the DOM anymore
+    expect(wrapper.find('.b-modal').exists()).toBe(false)
+  })
+})
+
