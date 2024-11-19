@@ -1,0 +1,136 @@
+import { shallowMount } from '@vue/test-utils'
+import BMIConverter from '@/components/BMIConverter.vue'
+import BMIForm from '@/components/BMIForm.vue'
+import BMIComparison from '@/components/BMIComparison.vue'
+import CommonButton from '@/components/common/CommonButton.vue'
+import { BMI_BUTTONS } from '@/common/recipe/rBMIButton'
+import { BMI_FORM_TEMPLATE, BMI_RESULTS } from '@/common/recipe/rBMI'
+
+describe('BMIConverter.vue', () => {
+  let wrapper
+
+  beforeEach(() => {
+    wrapper = shallowMount(BMIConverter, {
+      stubs: {
+        BMIForm,
+        BMIComparison,
+        CommonButton,
+      },
+      mocks: {
+        alert: jest.fn(), // Mocking alert
+      },
+    })
+  })
+
+  // Test initial data properties
+  it('renders correctly with initial data', () => {
+    expect(wrapper.vm.heading).toBe('BMI COMPARISON')
+    expect(wrapper.vm.showComparison).toBe(false)
+    expect(wrapper.vm.formValues).toEqual(BMI_FORM_TEMPLATE)
+    expect(wrapper.vm.bmiResults).toEqual(BMI_RESULTS)
+    expect(wrapper.vm.comparisonMessage).toBe('')
+  })
+
+  // Test that form validation works correctly
+  it('validates the form correctly', () => {
+    const validForm = wrapper.vm.validateForm()
+    expect(validForm).toBe(true)
+  })
+
+  it('shows alert when validation fails', () => {
+    // Modify form data to be invalid
+    wrapper.vm.formValues.person1.name = ''
+    const validForm = wrapper.vm.validateForm()
+    expect(validForm).toBe(false)
+  })
+
+  // Test getButtonFunction for compute action
+  it('computes BMI correctly when form is valid and compute button is clicked', async () => {
+    const computeButton = wrapper.findAllComponents(CommonButton).at(0)
+    const btn = BMI_BUTTONS.find(b => b.events.actionName === 'compute')
+
+    // Mock valid form data
+    wrapper.vm.formValues.person1.name = 'John'
+    wrapper.vm.formValues.person1.weight = 70
+    wrapper.vm.formValues.person1.height = 170
+    wrapper.vm.formValues.person2.name = 'Doe'
+    wrapper.vm.formValues.person2.weight = 80
+    wrapper.vm.formValues.person2.height = 180
+
+    await computeButton.trigger('click')
+    expect(wrapper.vm.isComputed).toBe(true)
+    expect(wrapper.vm.bmiResults.person1.bmi).toBeDefined()
+    expect(wrapper.vm.bmiResults.person2.bmi).toBeDefined()
+    expect(wrapper.vm.comparisonMessage).toBe('')
+  })
+
+  it('alerts when form is invalid and compute button is clicked', async () => {
+    const computeButton = wrapper.findAllComponents(CommonButton).at(0)
+
+    // Modify form to be invalid (empty name)
+    wrapper.vm.formValues.person1.name = ''
+    await computeButton.trigger('click')
+    expect(wrapper.vm.$alert).toHaveBeenCalledWith(
+      'Complete the details, special characters, 0 value or negative values are not accepted'
+    )
+  })
+
+  // Test getButtonFunction for compare action
+  it('compares BMI when compute has been executed', async () => {
+    const compareButton = wrapper.findAllComponents(CommonButton).at(1)
+    
+    // Set form data as computed
+    wrapper.vm.formValues.person1.name = 'John'
+    wrapper.vm.formValues.person1.weight = 70
+    wrapper.vm.formValues.person1.height = 170
+    wrapper.vm.formValues.person2.name = 'Doe'
+    wrapper.vm.formValues.person2.weight = 80
+    wrapper.vm.formValues.person2.height = 180
+
+    // Trigger compute to enable comparison
+    await wrapper.vm.getButtonFunction('compute')
+    await compareButton.trigger('click')
+
+    expect(wrapper.vm.comparisonMessage).toContain('has greater BMI')
+    expect(wrapper.vm.showComparison).toBe(true)
+  })
+
+  it('alerts when compare is clicked without computing BMI', async () => {
+    const compareButton = wrapper.findAllComponents(CommonButton).at(1)
+    await compareButton.trigger('click')
+    expect(wrapper.vm.$alert).toHaveBeenCalledWith('You need to compute the values first')
+  })
+
+  // Test getButtonFunction for reset action
+  it('resets the form when reset button is clicked', async () => {
+    const resetButton = wrapper.findAllComponents(CommonButton).at(2)
+
+    // Set form values and trigger reset
+    wrapper.vm.formValues.person1.name = 'John'
+    wrapper.vm.formValues.person1.weight = 70
+    wrapper.vm.formValues.person1.height = 170
+    await resetButton.trigger('click')
+
+    // Ensure form is reset
+    expect(wrapper.vm.formValues).toEqual(BMI_FORM_TEMPLATE)
+    expect(wrapper.vm.bmiResults).toEqual(BMI_RESULTS)
+    expect(wrapper.vm.isComputed).toBe(false)
+    expect(wrapper.vm.showComparison).toBe(false)
+  })
+
+  // Test dismiss alert
+  it('dismisses the comparison alert', async () => {
+    wrapper.vm.showComparison = true
+    const dismissButton = wrapper.findComponent(BMIComparison)
+    await dismissButton.trigger('dismissed')
+    expect(wrapper.vm.showComparison).toBe(false)
+  })
+
+  // Test BMI comparison message setter
+  it('sets the comparison message correctly', () => {
+    wrapper.vm.setComparisionMessage()
+    const message = wrapper.vm.comparisonMessage
+    expect(message).toContain('has greater BMI')
+  })
+})
+

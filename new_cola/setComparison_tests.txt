@@ -1,0 +1,100 @@
+import { shallowMount } from '@vue/test-utils';
+import BMIConverter from '@/components/BMIConverter.vue';
+
+describe('BMIConverter.vue', () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = shallowMount(BMIConverter, {
+      data() {
+        return {
+          bmiResults: {
+            person1: {
+              name: 'Person 1',
+              bmi: 25,
+              classification: 'Overweight'
+            },
+            person2: {
+              name: 'Person 2',
+              bmi: 22,
+              classification: 'Normal weight'
+            }
+          },
+          comparisonMessage: ''
+        };
+      }
+    });
+  });
+
+  it('sets the comparison message when person1 has a greater BMI', () => {
+    // Mock the BMI results so that person1 has a greater BMI
+    wrapper.setData({
+      bmiResults: {
+        person1: {
+          name: 'Person 1',
+          bmi: 25,
+          classification: 'Overweight'
+        },
+        person2: {
+          name: 'Person 2',
+          bmi: 22,
+          classification: 'Normal weight'
+        }
+      }
+    });
+
+    // Call the method
+    wrapper.vm.setComparisionMessage();
+
+    // Assert the expected message
+    expect(wrapper.vm.comparisonMessage).toBe('Person 1 has greater BMI of 25.00 - Overweight');
+  });
+
+  it('sets the comparison message when person2 has a greater BMI', () => {
+    // Mock the BMI results so that person2 has a greater BMI
+    wrapper.setData({
+      bmiResults: {
+        person1: {
+          name: 'Person 1',
+          bmi: 20,
+          classification: 'Normal weight'
+        },
+        person2: {
+          name: 'Person 2',
+          bmi: 22,
+          classification: 'Normal weight'
+        }
+      }
+    });
+
+    // Call the method
+    wrapper.vm.setComparisionMessage();
+
+    // Assert the expected message
+    expect(wrapper.vm.comparisonMessage).toBe('Person 2 has greater BMI of 22.00 - Normal weight');
+  });
+
+  it('sets the comparison message when both persons have the same BMI', () => {
+    // Mock the BMI results so that both persons have the same BMI
+    wrapper.setData({
+      bmiResults: {
+        person1: {
+          name: 'Person 1',
+          bmi: 22,
+          classification: 'Normal weight'
+        },
+        person2: {
+          name: 'Person 2',
+          bmi: 22,
+          classification: 'Normal weight'
+        }
+      }
+    });
+
+    // Call the method
+    wrapper.vm.setComparisionMessage();
+
+    // Assert the expected message
+    expect(wrapper.vm.comparisonMessage).toBe('Person 1 and Person 2 has the same BMI of 22.00 - Normal weight');
+  });
+});
